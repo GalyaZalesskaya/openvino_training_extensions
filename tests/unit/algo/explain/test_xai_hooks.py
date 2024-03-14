@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import torch
 from datumaro import Polygon
-from otx.algo.hooks.recording_forward_hook import (
+from otx.algo.explain.explain_algo import (
     ActivationMap,
-    DetClassProbabilityMapHook,
-    MaskRCNNRecordingForwardHook,
+    DetClassProbabilityMap,
+    MaskRCNNExplainAlgo,
     ReciproCAM,
     ViTReciproCAM,
 )
@@ -16,13 +16,13 @@ from torchvision import tv_tensors
 
 
 def test_activationmap() -> None:
-    hook = ActivationMap()
+    explain_algo = ActivationMap()
 
-    assert hook._norm_saliency_maps
+    assert explain_algo._norm_saliency_maps
 
     feature_map = torch.zeros((1, 10, 5, 5))
 
-    saliency_maps = hook.func(feature_map)
+    saliency_maps = explain_algo.func(feature_map)
     assert saliency_maps.size() == torch.Size([1, 5, 5])
 
 
@@ -32,17 +32,17 @@ def test_reciprocam() -> None:
 
     num_classes = 2
     optimize_gap = False
-    hook = ReciproCAM(
+    explain_algo = ReciproCAM(
         cls_head_forward_fn,
         num_classes=num_classes,
         optimize_gap=optimize_gap,
     )
 
-    assert hook._norm_saliency_maps
+    assert explain_algo._norm_saliency_maps
 
     feature_map = torch.zeros((1, 10, 5, 5))
 
-    saliency_maps = hook.func(feature_map)
+    saliency_maps = explain_algo.func(feature_map)
     assert saliency_maps.size() == torch.Size([1, 2, 5, 5])
 
 
@@ -51,46 +51,42 @@ def test_vitreciprocam() -> None:
         return torch.zeros((196, 2))
 
     num_classes = 2
-    hook = ViTReciproCAM(
+    explain_algo = ViTReciproCAM(
         cls_head_forward_fn,
         num_classes=num_classes,
     )
 
-    assert hook._norm_saliency_maps
+    assert explain_algo._norm_saliency_maps
 
     feature_map = torch.zeros((1, 197, 192))
 
-    saliency_maps = hook.func(feature_map)
+    saliency_maps = explain_algo.func(feature_map)
     assert saliency_maps.size() == torch.Size([1, 2, 14, 14])
 
 
 def test_detclassprob() -> None:
     num_classes = 2
     num_anchors = [1] * 10
-    hook = DetClassProbabilityMapHook(
+    explain_algo = DetClassProbabilityMap(
         num_classes=num_classes,
         num_anchors=num_anchors,
     )
 
-    assert hook.handle is None
-    assert hook.records == []
-    assert hook._norm_saliency_maps
+    assert explain_algo._norm_saliency_maps
 
     backbone_out = torch.zeros((1, 5, 2, 2, 2))
 
-    saliency_maps = hook.func(backbone_out)
+    saliency_maps = explain_algo.func(backbone_out)
     assert saliency_maps.size() == torch.Size([5, 2, 2, 2])
 
 
 def test_maskrcnn() -> None:
     num_classes = 2
-    hook = MaskRCNNRecordingForwardHook(
+    explain_algo = MaskRCNNExplainAlgo(
         num_classes=num_classes,
     )
 
-    assert hook.handle is None
-    assert hook.records == []
-    assert hook._norm_saliency_maps
+    assert explain_algo._norm_saliency_maps
 
     # One image, 3 masks to aggregate
     pred = InstanceSegBatchPredEntity(
@@ -113,6 +109,6 @@ def test_maskrcnn() -> None:
     )
 
     # 2 images
-    saliency_maps = hook.func([pred, pred])
+    saliency_maps = explain_algo.func([pred, pred])
     assert len(saliency_maps) == 2
     assert saliency_maps[0].shape == (2, 10, 10)
