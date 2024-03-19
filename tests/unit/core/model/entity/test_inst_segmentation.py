@@ -5,7 +5,6 @@
 
 import pytest
 import torch
-
 from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.algo.instance_segmentation.maskrcnn import MaskRCNN
 from otx.core.data.entity.instance_segmentation import InstanceSegBatchPredEntityWithXAI
@@ -31,7 +30,7 @@ class TestOTXInstanceSegModel:
         inputs = torch.randn(1, 3, 224, 224)
         otx_model.model.feature_vector_fn = feature_vector_fn
         otx_model.model.explain_fn = otx_model.get_explain_fn()
-        result = otx_model._forward_explain_inst_seg(otx_model.model, inputs, fxt_data_sample, mode = "predict")
+        result = otx_model._forward_explain_inst_seg(otx_model.model, inputs, fxt_data_sample, mode="predict")
 
         assert "predictions" in result
         assert "feature_vector" in result
@@ -49,7 +48,7 @@ class TestOTXInstanceSegModel:
         otx_model.training = False
         otx_model.explain_mode = True
         outputs = otx_model.forward_explain(inputs)
-        
+
         assert isinstance(outputs, InstanceSegBatchPredEntityWithXAI)
         assert outputs.feature_vectors is not None
         assert outputs.saliency_maps is not None
@@ -61,7 +60,7 @@ class TestOTXInstanceSegModel:
         otx_model._reset_model_forward()
         assert otx_model.original_model_forward is not None
         assert str(otx_model.model.forward) != str(otx_model.original_model_forward)
-    
+
         otx_model._restore_model_forward()
         assert otx_model.original_model_forward is None
         assert str(otx_model.model.forward) == str(initial_model_forward)

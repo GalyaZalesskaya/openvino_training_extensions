@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING
 import pytest
 import torch
 from importlib_resources import files
-
+from otx.algo.explain.explain_algo import feature_vector_fn
 from otx.core.data.entity.detection import DetBatchPredEntityWithXAI
 from otx.core.model.entity.detection import MMDetCompatibleModel
-from otx.algo.explain.explain_algo import feature_vector_fn
 
 if TYPE_CHECKING:
     from omegaconf import OmegaConf
     from omegaconf.dictconfig import DictConfig
+
 
 class TestOTXDetectionModel:
     @pytest.fixture()
@@ -64,7 +64,7 @@ class TestOTXDetectionModel:
         otx_model.training = False
         otx_model.explain_mode = True
         outputs = otx_model.forward_explain(inputs)
-        
+
         assert isinstance(outputs, DetBatchPredEntityWithXAI)
         assert outputs.feature_vectors is not None
         assert outputs.saliency_maps is not None
@@ -76,7 +76,7 @@ class TestOTXDetectionModel:
         otx_model._reset_model_forward()
         assert otx_model.original_model_forward is not None
         assert str(otx_model.model.forward) != str(otx_model.original_model_forward)
-    
+
         otx_model._restore_model_forward()
         assert otx_model.original_model_forward is None
         assert str(otx_model.model.forward) == str(initial_model_forward)
