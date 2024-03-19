@@ -12,7 +12,6 @@ import torch
 
 if TYPE_CHECKING:
     from mmengine.structures.instance_data import InstanceData
-    from torch.utils.hooks import RemovableHandle
 
 
 def feature_vector_fn(feature_map: torch.Tensor | Sequence[torch.Tensor]) -> torch.Tensor:
